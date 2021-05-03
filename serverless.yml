@@ -1,0 +1,140 @@
+service: ${file(serverless.config.js):repositoryName}
+
+frameworkVersion: ^2.2.0
+
+plugins:
+  - serverless-bundle
+  - serverless-dotenv-plugin
+  - serverless-configuration
+  - serverless-dynamodb-local
+  - serverless-plugin-resource-tagging
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  cfnRole: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-cloudformation
+  stage: ${opt:stage, "local"}
+  apiKeys:
+    - ${self:service}-${opt:stage, "local"}
+  apiGateway:
+    restApiId: ${env:AWS_REST_API_ID}
+    restApiRootResourceId: ${env:AWS_REST_API_ROOT_RESOURCE_ID}
+  tracing:
+    lambda: true
+  environment:
+    SERVICE_NAME: ${self:service}
+    STAGE: ${opt:stage, "local"}
+  stackTags:
+    ServiceName: ${self:service}
+    ServiceStage: ${opt:stage, "local"}
+
+functions:
+  # Public (no auth endpoint)
+  version-R-v1:
+    role: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${opt:stage, "local"}
+    handler: src/index.getVersion
+    events:
+      - http:
+          path: version
+          method: get
+
+  # Protected (via Authorizer)
+  sample-C-v1: # 'C' === 'create' (HTTP POST)
+    role: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${opt:stage, "local"}
+    handler: src/api/v1/sample/index.createSampleV1
+    events:
+      - http:
+          path: api/v1/sample
+          method: post
+          cors: true
+          authorizer:
+            name: ${self:service}-${opt:stage, "local"}-authorizer-v1
+            arn: !ImportValue ${opt:stage, "local"}-sly-auth-api-authorize-v1-arn
+  sample-R-v1: # 'R' === 'read' (HTTP GET)
+    role: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${opt:stage, "local"}
+    handler: src/api/v1/sample/index.readSampleV1
+    events:
+      - http:
+          path: api/v1/sample/{sk}
+          method: get
+          cors: true
+          authorizer:
+            name: ${self:service}-${opt:stage, "local"}-authorizer-v1
+            arn: !ImportValue ${opt:stage, "local"}-sly-auth-api-authorize-v1-arn
+            resultTtlInSeconds: 0 # Set to 0 when caching is disabled in API Gateway and there is a path parameter
+  sample-U-v1: # 'U' === 'update' (HTTP PATCH)
+    role: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${opt:stage, "local"}
+    handler: src/api/v1/sample/index.updateSampleV1
+    events:
+      - http:
+          path: api/v1/sample/{sk}
+          method: patch
+          cors: true
+          authorizer:
+            name: ${self:service}-${opt:stage, "local"}-authorizer-v1
+            arn: !ImportValue ${opt:stage, "local"}-sly-auth-api-authorize-v1-arn
+            resultTtlInSeconds: 0 # Set to 0 when caching is disabled in API Gateway and there is a path parameter
+  sample-D-v1: # 'D' === 'delete' (HTTP DELETE)
+    role: arn:${env:AWS_PARTITION}:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${opt:stage, "local"}
+    handler: src/api/v1/sample/index.deleteSampleV1
+    events:
+      - http:
+          path: api/v1/sample/{sk}
+          method: delete
+          cors: true
+          authorizer:
+            name: ${self:service}-${opt:stage, "local"}-authorizer-v1
+            arn: !ImportValue ${opt:stage, "local"}-sly-auth-api-authorize-v1-arn
+            resultTtlInSeconds: 0 # Set to 0 when caching is disabled in API Gateway and there is a path parameter
+
+resources:
+  Resources:
+    Table:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${opt:stage, "local"}-${self:service}
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        TimeToLiveSpecification:
+          AttributeName: expires
+          Enabled: true
+        SSESpecification:
+          SSEEnabled: true
+        BillingMode: PAY_PER_REQUEST
+
+custom:
+  serverless-offline:
+    useChildProcesses: false
+    noPrependStageInUrl: true
+    prefix: ${file(serverless.config.js):serviceName}
+  bundle:
+    packager: yarn
+    copyFiles:
+      - from: './.scaffoldly/${opt:stage, "local"}'
+        to: './.scaffoldly'
+  serverless-configuration:
+    local:
+      del:
+        - provider.apiGateway.restApiId
+        - provider.apiGateway.restApiRootResourceId
+        - custom.bundle.copyFiles
+  dynamodb:
+    stages:
+      - local
+    start:
+      port: 8100
+      dbPath: .dynamodb
+      migrate: true
