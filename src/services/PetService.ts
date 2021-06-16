@@ -19,13 +19,15 @@ export class PetService {
   ): Promise<PetResponse> => {
     const accountApi = new AccountApi(new Configuration({ accessToken: token }));
 
-    const { data: account } = await accountApi.getAccountById(user.id);
+    const { data: account } = await accountApi.getAccountById(user.id, {
+      validateStatus: (status: number) => status === 200 || status === 404, // Don't thow errors on 404s
+    });
 
     const pet = await this.petModel.model.create({
       ...request,
       pk: ulid(),
       sk: 'pet',
-      createdBy: { id: account.id, email: account.email, name: account.name },
+      createdBy: { id: user.id, email: account.email, name: account.name },
     });
 
     return {
