@@ -1,18 +1,31 @@
 Fully functional (local and cloud) backend for execution in AWS Lambda and AWS
 API Gateway, and deployed using GitHub Actions using the `serverless` tool.
 
-Generated using [Scaffoldly Bootstrap](https://docs.scaffold.ly/).
+This service is a micro-service so avoid globbing it with mutliple controllers,
+unless absolutely necessary. Addtional services can be configured within the
+`scaffoldly-bootstrap` project.
+
+Generated using [Scaffoldly](https://scaffold.ly/). More information can be
+found in the [Scaffoldly Documentation](https://docs.scaffold.ly/)
 
 ### Features
 
 - Serverless: Managed deployments to Lambda and API Gateway using GitHub actions
+
 - Express: Familar backend API for Node, but wired up to work on API Gateway
+
 - OpenAPI: Uses tsoa to take decorated controllers to auto-generate and serve
-  API specification
+  API specification. The entire project is in TypeScript for strong typing from
+  the API down to the DynamoDB tables.
+
 - AuthN/AuthZ: Integrated with `sly-auth-api` in this organization for
   centralized authentication/authorization
+
 - Service Discovery: `scaffoldly-bootstrap` managed configuration files in
   `./scaffoldly` for simple service discovery
+
+- Local Debugability: The preconfigured environment generates the needed source
+  maps for the ability to set and introspect breakpoints
 
 # Getting Started
 
@@ -23,6 +36,57 @@ yarn
 ```
 
 2. Open the project in [VSCode](https://code.visualstudio.com/), and press `F5` to run.
+
+# Debugging
+
+You can place breakpoints in any of the files, and VSCode will pause execution
+for introspection when running locally.
+
+## Steps Taken
+
+When running (or deploying) a project, the following steps are automatically taken:
+
+- `yarn dotenv`: Generates `src/env.ts` from the environment configuration in
+  `./scaffoldly`
+- `yarn types`: Generates interfaces based on schema files in
+  `./src/models/schemas` using `joi-to-typescript`
+- `yarn openapi`: Generates `src/routes.ts` and `src/swagger.json` for Express
+  Routing and the OpenAPI specification, respectively.
+- `yarn dynamodb`: Prepares `dynamodb-local` for local interaction with DynamoDB
+- `yarn tsc`: Compiles typescript files for debugging.
+
+# Adding Controllers
+
+To add a new controller, create a file named `*Controller*.ts` to the
+`./src/controllers` directory, and it will be automatically discovered and
+and hosted on Serverless + Express.
+
+Controllers are decorated using a library called `tsoa` for automatic library
+generation.
+
+Copy/pasting an existing controller is currently the recommended way to make a
+new controller.
+
+# Adding Models
+
+This service is configured to have a DynamoDB table as a persistent store.
+
+The table itself is defined in `serverless.yml`, and it's code-model is defined
+in `./src/models`, and the schemas are defined in `./src/models/schemas`.
+
+Copy/pasting an existing model and schema is currently the recommended way to
+make a new controller.
+
+Schema interfaces are auto-generated using the `joi-to-typescript` tool, and
+created when `yarn types` is executed.
+
+# Adding Services
+
+Services are an (optional) abstraction layer between the Controllers and the
+Models, resuliting in visually clean controllers.
+
+Copy/pasting an existing service is currently the recommended way to make a new
+service.
 
 # OpenAPI Auto-Generation
 
