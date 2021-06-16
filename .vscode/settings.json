@@ -5,7 +5,7 @@
   },
   "filewatcher.commands": [
     {
-      "match": "src/(controllers|interfaces|models/interfaces)/(.*).ts",
+      "match": "src/(controllers|interfaces|models/interfaces|services)/(.*).ts",
       "cmd": "cd ${workspaceRoot} && yarn openapi",
       "event": "onFileChange"
     },
@@ -19,5 +19,4 @@
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
-  "comands"
 }

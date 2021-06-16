@@ -1,4 +1,8 @@
-import { ErrorResponse, HttpRequestWithUser } from '@scaffoldly/serverless-util';
+import {
+  ErrorResponse,
+  extractRequestToken,
+  HttpRequestWithUser,
+} from '@scaffoldly/serverless-util';
 import {
   Body,
   Controller,
@@ -46,7 +50,7 @@ export class RootControllerV1 extends Controller {
     @Body() petRequest: CreatePetRequest,
     @Request() request: HttpRequestWithUser,
   ): Promise<PetResponse> {
-    return this.petService.createPet(petRequest, request.user);
+    return this.petService.createPet(petRequest, request.user, extractRequestToken(request));
   }
 
   @Get('{id}')

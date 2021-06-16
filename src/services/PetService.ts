@@ -3,6 +3,7 @@ import { ulid } from 'ulid';
 import { CreatePetRequest, UpdatePetRequest } from '../interfaces/requests';
 import { ListResponse, PetResponse } from '../interfaces/responses';
 import { PetModel } from '../models/PetModel';
+import { AccountApi, Configuration } from './openapi/auth';
 
 export class PetService {
   petModel: PetModel;
@@ -14,12 +15,17 @@ export class PetService {
   public createPet = async (
     request: CreatePetRequest,
     user: DecodedJwtPayload,
+    token: string,
   ): Promise<PetResponse> => {
+    const accountApi = new AccountApi(new Configuration({ accessToken: token }));
+
+    const { data: account } = await accountApi.getAccountById(user.id);
+
     const pet = await this.petModel.model.create({
       ...request,
       pk: ulid(),
       sk: 'pet',
-      createdBy: user.id,
+      createdBy: { id: account.id, email: account.email, name: account.name },
     });
 
     return {
@@ -69,7 +75,7 @@ export class PetService {
       throw new HttpError(404, 'Not Found');
     }
 
-    if (result.attrs.createdBy !== user.id) {
+    if (result.attrs.createdBy.id !== user.id) {
       throw new HttpError(403, 'Forbidden');
     }
 
@@ -85,7 +91,7 @@ export class PetService {
       throw new HttpError(404, 'Not Found');
     }
 
-    if (result.attrs.createdBy !== user.id) {
+    if (result.attrs.createdBy.id !== user.id) {
       throw new HttpError(403, 'Forbidden');
     }
 

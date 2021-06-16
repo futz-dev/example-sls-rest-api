@@ -9,11 +9,10 @@ const envVars = NODE_ENV
   : JSON.parse(fs.readFileSync(fs.openSync(`.scaffoldly/env-vars.json`)));
 
 (async () => {
+  console.log('Generating spec...');
   await generateSpec({
     basePath: `/${envVars.SERVICE_NAME}`,
     name: envVars.APPLICATION_NAME,
-    host: 'localhost:3000',
-    schemes: ['http'],
     version: packageJson.version,
     description: `To generate a JWT token, go to the <a href="https://${envVars.SERVERLESS_API_DOMAIN}/auth/jwt.html" target="_blank">JWT Token Generator</a>`,
     entryFile: 'src/app.ts',
@@ -30,6 +29,7 @@ const envVars = NODE_ENV
     },
   });
 
+  console.log('Generating routes...');
   await generateRoutes({
     entryFile: 'src/app.ts',
     noImplicitAdditionalProperties: 'throw-on-extras',
