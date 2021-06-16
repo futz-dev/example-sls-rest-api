@@ -33,7 +33,7 @@ export class RootControllerV1 extends Controller {
   @Response<ErrorResponse>('5XX')
   public async list(
     @Query() lastKey?: string,
-    @Query() limit = 10,
+    @Query() limit?: number,
   ): Promise<ListResponse<PetResponse>> {
     return this.petService.listPets(lastKey, limit);
   }

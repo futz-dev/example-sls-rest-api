@@ -5,6 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "preLaunchTask": "prepare",
       "type": "node",
       "request": "launch",
       "name": "Local Debug",

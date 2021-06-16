@@ -3,9 +3,10 @@
   "version": "1.9.3-1",
   "license": "UNLICENSED",
   "scripts": {
-    "prepare": "yarn dotenv && yarn types && yarn openapi && yarn dynamodb",
+    "prepare": "yarn dotenv && yarn types && yarn openapi && yarn dynamodb && yarn build",
+    "build": "tsc",
     "start": "yarn serverless offline start",
-    "deploy": "yarn openapi && yarn serverless deploy",
+    "deploy": "yarn serverless deploy",
     "serverless": "SLS_DEBUG=* serverless",
     "dotenv": "dotenv -e .scaffoldly/.env -c $NODE_ENV -- ngx-scripts env service_urls env_vars --parse-json --out src/env.ts",
     "types": "yarn ts-node types.ts",
@@ -43,7 +44,7 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@scaffoldly/serverless-util": "3.0.8",
+    "@scaffoldly/serverless-util": "^3.0.23",
     "@vendia/serverless-express": "^4.3.7",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
