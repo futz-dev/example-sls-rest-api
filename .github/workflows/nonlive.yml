@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >- 
       !startsWith(github.event.head_commit.message, 'Initial commit') && 
-      !startsWith(github.event.head_commit.message, '[Scaffoldly]')" &&
+      !startsWith(github.event.head_commit.message, '[Scaffoldly]') &&
       !startsWith(github.event.head_commit.message, 'Delete .scaffoldly')
     steps:
       - uses: actions/checkout@v2
