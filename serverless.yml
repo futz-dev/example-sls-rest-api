@@ -57,13 +57,13 @@ functions:
           arn:
             Fn::GetAtt: [Table, StreamArn]
   sns-event-handler:
-    role: arn:${env:AWS_PARTITION, ""}:iam::${env:AWS_ACCOUNT_ID, ""}:role/${self:service}-${opt:stage, "local"}
-    handler: src/lambda.snsEventHandler
-    timeout: 30
-    events:
-      - sns:
-          topicName: ${opt:stage, "local"}-${self:service}-topic
-          displayName: ${opt:stage, "local"}-${self:service}-topic
+    # role: arn:${env:AWS_PARTITION, ""}:iam::${env:AWS_ACCOUNT_ID, ""}:role/${self:service}-${opt:stage, "local"}
+    # handler: src/lambda.snsEventHandler
+    # timeout: 30
+    # events:
+    #   - sns:
+    #       topicName: ${opt:stage, "local"}-${self:service}-topic
+    #       displayName: ${opt:stage, "local"}-${self:service}-topic
 
 resources:
   Resources:
@@ -89,10 +89,10 @@ resources:
         SSESpecification:
           SSEEnabled: true
         BillingMode: PAY_PER_REQUEST
-    Topic:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: ${opt:stage, "local"}-${self:service}-topic
+    # Topic:
+    #   Type: AWS::SNS::Topic
+    #   Properties:
+    #     TopicName: ${opt:stage, "local"}-${self:service}-topic
 
 custom:
   serverless-offline:
